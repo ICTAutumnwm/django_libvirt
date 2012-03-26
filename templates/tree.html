@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<script type="text/javascript" src="/media/jquery/jquery.js"></script>
+      <!--link rel="StyleSheet" href="/media/dtree/dtree.css" type="text/css" /-->
+      <script type="text/javascript" src="/media/dtree/dtree.js"></script>
+		<script type="text/javascript">
+		
+		</script>
+</head>
+<body bgcolor="#f0f0f0">
+
+<div class="dtree" id="treeDiv" style="font-size:20px; width: 200px; height: 200px ;position: absolute; left:20px;top:20px">
+	<script type="text/javascript">
+                    //生成新的树，ajax方式获取最新tree，每个json item表示一个节点
+       /* $.getJSON('/ajax/tree',function(data){
+                  tree = new dTree('tree');   //参数tree，表示生成的html代码中id的标记，不影响功能
+                  tree.add(0,-1,'Management');     //树根
+                        //遍历JSON中的每个entry
+                  $.each(data,function(entryIndex,entry){
+                       tree.add(entry['id'], entry['pid'], entry['name'],'','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
+                                                 });
+                  $("#treeDiv").html(tree.toString());
+                                });*/
+       function getTree(){ 
+            //var stime1 = new Date();
+            $.getJSON('/ajax/tree',function(data){
+                  tree = new dTree('tree');   //参数tree，表示生成的html代码中id的标记，不影响功能
+                  tree.add(0,-1,'Management');     //树根
+                        //遍历JSON中的每个entry
+                  $.each(data,function(entryIndex,entry){
+                       tree.add(entry['id'], entry['pid'], entry['name'],'resource?' + entry['url'],'','rsrc','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
+                       //tree.add(entry['id'], entry['pid'], entry['name'],'frametest?ip='+ '127.0.0.1' +'&number='+entry['name'],'','rsrc','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
+                                                 });
+                  $("#treeDiv").html(tree.toString());
+                                });
+            var etime1 = new Date();
+            //d_date1=etime1.getTime()-stime1.getTime();
+ 				//setInterval("getTree()", 3000);
+                    }
+		 setInterval("getTree()",3000 );
+       //getTree();
+	</script>
+</div>
+	</body>
+</html>

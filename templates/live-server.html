@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>虚拟机集群管理系统</title>
+		<script type="text/javascript" src="/media/jquery/jquery.js"></script>
+      <!--link rel="StyleSheet" href="/media/dtree/dtree.css" type="text/css" /-->
+      <script type="text/javascript" src="/media/dtree/dtree.js"></script>
+		<script type="text/javascript">
+
+		var chart; // global
+      var chart1; // global
+var chart_cpu;
+		/**
+		 * Request data from the server, add it to the graph and set a timeout to request again
+		 */
+		//更新
+		function requestData() {
+			$.ajax({
+				url: '/ajax/json', 
+            //url: '/media/info.py', 
+            //url: '/media/a.txt',
+            //data: mydata,
+				success: function(point) {
+               //alert("success");
+					var series = chart.series[0],
+						shift = series.data.length > 20; // shift if the series is longer than 20
+		
+					// add the point
+               var x = (new Date()).getTime() + 8*3600*1000; // 当前时间 
+               var out = eval("(" + point + ")")
+					var y1 = out[0]
+               var y2 = out[1]
+               var y3 = out[2]
+               var y4 = out[3]
+               chart.series[0].addPoint([x,y1], true, shift);
+               chart1.series[0].addPoint([x,y2], true,  shift);
+               /*alert(y1);
+               alert(y2);
+               alert(y3);
+               alert(y4);*/
+					// call it again after one second
+					setTimeout(requestData, 1000);	
+				},
+				cache: false
+			});
+		}
+			
+		$(function() {
+			chart = new Highcharts.Chart({
+				chart: {
+					renderTo: 'cpu',
+					defaultSeriesType: 'spline',
+				   backgroundColor:'#DFFDFD',
+					events: {
+						load: requestData
+					}
+				},
+				title: { 
+            	text: 'CPU使用记录走势图'  //图表标题 
+                      		}, 
+			   xAxis: { //设置X轴 
+            	title: { text: '时间'   },  
+            	type: 'datetime',  //X轴为日期时间类型 
+            	tickPixelInterval: 150  //X轴标签间隔 
+                      		}, 
+				yAxis: { //设置Y轴 
+            	title: { text: 'CPU使用率'   },
+            	labels: {
+			   		  formatter: function() {
+					    		return this.value +'%';
+					              }
+                                	 },
+            	max: 100, //Y轴最大值 
+            	min: 0  //Y轴最小值 
+                      		}, 
+            legend: { 
+            	enabled: false  //设置图例不可见 
+                      		}, 
+		      exporting: { 
+      	      enabled: false  //设置导出按钮不可用 
+                	       }, 
+				series: [{
+					name: 'Random data',
+					data: []
+				}]
+			});
+		});
+		$(function() {
+			chart1 = new Highcharts.Chart({
+				chart: {
+					renderTo: 'mem',
+					defaultSeriesType: 'spline',
+					events: {
+						//load: requestData
+					}
+				},
+				title: {
+					text: 'Live random data'
+				},
+				xAxis: {
+					type: 'datetime',
+					tickPixelInterval: 150,
+					maxZoom: 20 * 1000
+				},
+				yAxis: {
+					minPadding: 0.2,
+					maxPadding: 0.2,
+					title: {
+						text: 'Value',
+						margin: 80
+					}
+				},
+				series: [{
+					name: 'Random data',
+					data: []
+				}]
+			});				
+		});
+		</script>
+		
+	</head>
+	<body>
+<script type="text/javascript" src="/media/js/highcharts.js"></script>
+<script type="text/javascript" src="/media/js/modules/exporting.js"></script>
+<h3>虚拟机集群管理系统</h3>
+<p> </p>
+<div id="query" style="width: 300px; height: 200px ;position: absolute; left:500px;top:70px">
+    <!--a>ip:</a--> <input type="text" id="ip" value="127.0.0.1"/>
+    <!--a>number:</a--> <input type="text" id="n" value="1"/>
+    <p><input type="button" value="查询"  onclick="query()" ></p>
+</div>
+<div class="dtree" style="background-color:white; font-size:20px; width: 300px; height: 200px ;position: absolute; left:100px;top:70px">
+	<script type="text/javascript">
+		d = new dTree('d');
+
+		d.add(0,-1,'Management');
+		d.add(1,0,'Node 1','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
+		d.add(2,0,'Node 2','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
+		d.add(3,1,'VM 1.1','','','','/media/dtree/img/cd.gif','/media/dtree/img/cd.gif');
+		d.add(4,0,'Node 3','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
+		d.add(5,4,'VM 4.1','','','','/media/dtree/img/cd.gif','/media/dtree/img/cd.gif');
+		d.add(6,4,'VM 4.2','','','','/media/dtree/img/cd.gif','/media/dtree/img/cd.gif');
+
+		document.write(d);
+	</script>
+</div>
+<!--div class="dtree" style="font-size:22px">test</div-->
+<div id="cpu" style="width: 600px; height: 300px; position: absolute; left:50px;top:250px"></div>
+<p> </p>
+<div id="mem" style="width: 600px; height: 300px; position: absolute; left:50px;top:600px"></div>
+<p> </p>
+<div id="rx" style="width: 600px; height: 300px; position: absolute; left:700px;top:250px"></div>
+<p> </p>
+<div id="tx" style="width: 600px; height: 300px; position: absolute; left:700px;top:600px"></div>
+<!--div id="tx" style="width: 600px; height: 300px; margin: 0 auto"></div-->
+
+
+	</body>
+</html>
