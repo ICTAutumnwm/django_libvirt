@@ -5,34 +5,118 @@
 		<title>虚拟机集群管理系统</title>
 		<script type="text/javascript" src="/media/jquery/jquery.js"></script>
       <!--link rel="StyleSheet" href="/media/dtree/dtree.css" type="text/css" /-->
-      <script type="text/javascript" src="/media/dtree/dtree.js"></script>
 		<script type="text/javascript">
+		var chart_cpu;
+		var chart_mem;
+		var chart_rx; 
+		var chart_tx; 
+		var maxmem;
+		var mem;
+		var pre_cpu = 0
+		var pre_cpu_total = 0
+		var pre_rb = 0
+		var pre_tb = 0
+		var flag = 1
+      var para = window.location.search;
+      //alert(para)
+	   /*myurl = '/ajax/json1'
+    	if(para=="")
+			myurl = '/ajax/jsonmgt'
+	   alert(myurl)*/
+		/*function myinit() {
+			$.ajax({
+            async: false,
+				url:'/ajax/jsonmgt', 
+				success: function(point) {
+               var out = eval("(" + point + ")")
+					maxmem = out[0]
+               pre_cpu = out[2]
+               pre_cpu_total = out[3]
+               pre_rb = out[4]
+               pre_tb = out[5]
+				},
+				cache: false
+			});
+		}*/
+	   //myinit();
+		//更新
+		function requestData() {
+         var stime = new Date();
+			$.ajax({
+            //async: false,
+				url:'/ajax/jsonmgt', 
+				success: function(point) {
+               
+               /*if(!chart_cpu){
+      				 setTimeout(requestData, 1000);
+                   return     
+                                         }   */                                        
+               //alert("success")
+               // add 4 points
+               var x = (new Date()).getTime() + 8*3600*1000; // 当前时间 
+               var out = eval("(" + point + ")")
+               //var out = eval( point )
+               maxmem = out[0]
+               mem = out[1]
+               cpu_use = out[2]
+               cpu_total = out[3]
+               rb = out[4]
+               tb = out[5]
+
+               memrate = mem/maxmem * 100
+					//cpu
+					d_cpu = cpu_use - pre_cpu
+					d_cpu_total = cpu_total - pre_cpu_total
+					pre_cpu = cpu_use
+					pre_cpu_total = cpu_total
+	    			cpurate = d_cpu/d_cpu_total *100
+					//rb tb
+					d_rb = rb - pre_rb
+					d_tb = tb - pre_tb
+					pre_rb = rb
+					pre_tb = tb
+	    			rkb = d_rb/1024
+					tkb = d_tb/1024
+					if(flag == 1){
+			         rkb = 0
+         			tkb = 0
+         			cpurate = 0
+						memrate = 0
+         			flag =0
+					}
+					//add points
+               chart_cpu.series[0].addPoint([x,cpurate], true, true);
+               chart_mem.series[0].addPoint([x,memrate], true, true);
+               chart_rx.series[0].addPoint([x,rkb], true, true);
+               chart_tx.series[0].addPoint([x,tkb], true, true);
+
+               var etime = new Date();
+               d_date=etime.getTime()-stime.getTime();
+					setTimeout(requestData, 1000 - d_date);	
+				},
+				cache: false
+			});
+		}
+		
+
 
 //cpu
-var chart_cpu; 
-$(function() { 
+$(document).ready(function(){ 
     chart_cpu = new Highcharts.Chart({ 
         chart: { 
             renderTo: 'cpu', //图表放置的容器，DIV 
             defaultSeriesType: 'spline', //图表类型为曲线图 
             backgroundColor:'#DFFDFD',
             events: { 
-                load: function() {  
-                    var series = this.series[0]; 
-                    setInterval(function() { 
-                        var x = (new Date()).getTime() + 8*3600*1000, // 当前时间 
-                        y = Math.random() * 100;//{{ cpu }}*100;  
-                        series.addPoint([x, y], true, true); 
-                                                     }, 1000); 
-                                           } 
+                //load: requestData
                                } 
                       }, 
         title: { 
-            text: 'CPU使用记录走势图'  //图表标题 
+            text: 'CPU使用记录走势图'      //图表标题 
                       }, 
         xAxis: { //设置X轴 
             title: { text: '时间'   },  
-            type: 'datetime',  //X轴为日期时间类型 
+            type: 'datetime',       //X轴为日期时间类型 
             tickPixelInterval: 150  //X轴标签间隔 
                       }, 
         yAxis: { //设置Y轴 
@@ -68,7 +152,7 @@ $(function() {
                 for (i = -19; i <= 0; i++) { 
                     data.push({ 
                         x: time + i * 1000,  
-                        y: {{ cpu0 }} *100 
+                        y: 0 * 100 
                                                       }); 
                                            } 
                 return data; 
@@ -77,7 +161,7 @@ $(function() {
            }); 
 }); 
 //mem
-var chart_mem; 
+ 
 $(function() { 
     chart_mem = new Highcharts.Chart({ 
         chart: { 
@@ -85,15 +169,7 @@ $(function() {
             defaultSeriesType: 'spline', //图表类型为曲线图 
             backgroundColor:'#DFFDFD',
             events: { 
-                load: function() {  
-                    var series = this.series[0]; 
-                    //每隔5秒钟，图表更新一次，y数据值在0-100之间的随机数 
-                    setInterval(function() { 
-                        var x = (new Date()).getTime()+8*3600*1000, // 当前时间 
-                        y = {{ mem }};  
-                        series.addPoint([x, y], true, true); 
-                                                      },1000); 
-                                           } 
+
                                  } 
                       }, 
         title: { 
@@ -108,18 +184,18 @@ $(function() {
             title: { text: '内存使用记录'   },
             labels: {
 			   	  formatter: function() {
-				    		return this.value / 100 +'k';
+				    		return this.value + '%';
 				              }
                                  },
-            max: 1000, //Y轴最大值 
+            max: 100, //Y轴最大值 
             min: 0  //Y轴最小值 
 
                       }, 
         tooltip: {//当鼠标悬置数据点时的提示框 
             formatter: function() { //格式化提示信息 
-                return '内存使用'+ 
-                Highcharts.dateFormat('%H:%M:%S', this.x) +' '+  
-                Highcharts.numberFormat(this.y, 2)+'k'; 
+                return Highcharts.dateFormat('%H:%M:%S', this.x) +' '+  
+                Highcharts.numberFormat(this.y, 2) + '%' + ' ' +
+					 Highcharts.numberFormat(mem,0) + 'MB';
                                 } 
                       }, 
         legend: { 
@@ -138,7 +214,7 @@ $(function() {
                 for (i = -19; i <= 0; i++) { 
                     data.push({ 
                         x: time + i * 1000,  
-                        y: {{ mem0 }} 
+                        y: 0 
                                                       }); 
                                             } 
                 return data; 
@@ -147,22 +223,15 @@ $(function() {
          }); 
 }); 
 //rx
-var chart_rx; 
+
 $(function() { 
     chart_rx = new Highcharts.Chart({ 
         chart: { 
             renderTo: 'rx', //图表放置的容器，DIV 
             defaultSeriesType: 'spline', //图表类型为曲线图 
-            backgroundColor:'#DFFDFD',
+            backgroundColor:'#DFFDFD',   //背景颜色
             events: { 
-                load: function() {  
-                    var series = this.series[0]; 
-                    setInterval(function() { 
-                        var x = (new Date()).getTime() + 8*3600*1000, // 当前时间 
-                        y = {{ cpu }}*100;  
-                        series.addPoint([x, y], true, true); 
-                                                       }, 1000); 
-                                           } 
+             
                                  } 
                       }, 
         title: { 
@@ -175,7 +244,12 @@ $(function() {
                       }, 
         yAxis: { //设置Y轴 
             title: { text: '接收网络流量'   },
-            max: 100, //Y轴最大值 
+            labels: {
+			   	  formatter: function() {
+				    		return this.value +'kb/s';
+				              }
+                                 },
+            max: 200, //Y轴最大值 
             min: 0  //Y轴最小值 
                       }, 
         tooltip: {//当鼠标悬置数据点时的提示框 
@@ -201,7 +275,7 @@ $(function() {
                 for (i = -19; i <= 0; i++) { 
                     data.push({ 
                         x: time + i * 1000,  
-                        y: {{ cpu0 }} *100 
+                        y: 0 
                                                       }); 
                                            } 
                 return data; 
@@ -210,7 +284,7 @@ $(function() {
           }); 
 }); 
 //tx
-var chart_tx; 
+
 $(function() { 
     chart_tx = new Highcharts.Chart({ 
         chart: { 
@@ -218,14 +292,7 @@ $(function() {
             defaultSeriesType: 'spline', //图表类型为曲线图 
             backgroundColor:'#DFFDFD',
             events: { 
-                load: function() {  
-                    var series = this.series[0]; 
-                    setInterval(function() { 
-                        var x = (new Date()).getTime() + 8*3600*1000, // 当前时间 
-                        y = {{ cpu }}*100;  
-                        series.addPoint([x, y], true, true); 
-                                                       }, 1000); 
-                                           } 
+                 load: requestData
                                  } 
                       }, 
         title: { 
@@ -238,7 +305,12 @@ $(function() {
                       }, 
         yAxis: { //设置Y轴 
             title: { text: '发送网络流量'   },
-            max: 100, //Y轴最大值 
+            labels: {
+			   	  formatter: function() {
+				    		return this.value +'kb/s';
+				              }
+                                 },
+            max: 200, //Y轴最大值 
             min: 0  //Y轴最小值 
                       }, 
         tooltip: {//当鼠标悬置数据点时的提示框 
@@ -264,7 +336,7 @@ $(function() {
                 for (i = -19; i <= 0; i++) { 
                     data.push({ 
                         x: time + i * 1000,  
-                        y: {{ cpu0 }} *100 
+                        y: 0
                                                       }); 
                                            } 
                 return data; 
@@ -272,44 +344,19 @@ $(function() {
                      }] 
           }); 
 }); 
-
 		</script>
 </head>
-<body>
+<body bgcolor="#f0f0f0">
 <script type="text/javascript" src="/media/js/highcharts.js"></script>
 <script type="text/javascript" src="/media/js/modules/exporting.js"></script>
-<h3>虚拟机集群管理系统</h3>
+<p>主控节点</p>
+<div id="cpu" style="width: 480px; height: 240px; position: absolute; left:20px;top:50px"></div>
 <p> </p>
-<div id="query" style="width: 300px; height: 200px ;position: absolute; left:500px;top:70px">
-    <!--a>ip:</a--> <input type="text" id="ip" value="127.0.0.1"/>
-    <!--a>number:</a--> <input type="text" id="n" value="1"/>
-    <p><input type="button" value="查询"  onclick="query()" ></p>
-</div>
-<div class="dtree" style="background-color:white; font-size:20px; width: 300px; height: 200px ;position: absolute; left:100px;top:70px">
-	<script type="text/javascript">
-		d = new dTree('d');
-
-		d.add(0,-1,'Management');
-		d.add(1,0,'Node 1','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
-		d.add(2,0,'Node 2','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
-		d.add(3,1,'VM 1.1','','','','/media/dtree/img/cd.gif','/media/dtree/img/cd.gif');
-		d.add(4,0,'Node 3','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
-		d.add(5,4,'VM 4.1','','','','/media/dtree/img/cd.gif','/media/dtree/img/cd.gif');
-		d.add(6,4,'VM 4.2','','','','/media/dtree/img/cd.gif','/media/dtree/img/cd.gif');
-
-		document.write(d);
-	</script>
-</div>
-<!--div class="dtree" style="font-size:22px">test</div-->
-<div id="cpu" style="width: 600px; height: 300px; position: absolute; left:50px;top:250px"></div>
+<div id="mem" style="width: 480px; height: 240px; position: absolute; left:20px;top:300px"></div>
 <p> </p>
-<div id="mem" style="width: 600px; height: 300px; position: absolute; left:50px;top:600px"></div>
+<div id="rx" style="width: 480px; height: 240px; position: absolute; left:510px;top:50px"></div>
 <p> </p>
-<div id="rx" style="width: 600px; height: 300px; position: absolute; left:700px;top:250px"></div>
-<p> </p>
-<div id="tx" style="width: 600px; height: 300px; position: absolute; left:700px;top:600px"></div>
+<div id="tx" style="width: 480px; height: 240px; position: absolute; left:510px;top:300px"></div>
 <!--div id="tx" style="width: 600px; height: 300px; margin: 0 auto"></div-->
-
-
 	</body>
 </html>

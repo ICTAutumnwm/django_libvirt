@@ -5,32 +5,32 @@
 		<title>虚拟机集群管理系统</title>
 		<script type="text/javascript" src="/media/jquery/jquery.js"></script>
       <!--link rel="StyleSheet" href="/media/dtree/dtree.css" type="text/css" /-->
-      <script type="text/javascript" src="/media/dtree/dtree.js"></script>
 		<script type="text/javascript">
-		var chart_cpu;//= new Date(); 
+		var chart_cpu;
 		var chart_mem;
 		var chart_rx; 
 		var chart_tx; 
-      //var stime = new Date();
-      //var etime = new Date();
+      var para = window.location.search;
+      alert(para)
+	   myurl = '/ajax/json1'
+    	if(para=="")
+			myurl = '/ajax/jsonmgt'
+	   alert(myurl)
 		//更新
 		function requestData() {
+         var stime = new Date();
 			$.ajax({
-            async: false,
-				url: '/ajax/json', 
+            //async: false,
+				url: myrul + para, 
 				success: function(point) {
-               var stime = new Date();
-               //setTimeout(requestData, 5000);
-               if(!chart_cpu){
+               
+               /*if(!chart_cpu){
       				 setTimeout(requestData, 1000);
                    return     
-                                         }                                           
+                                         }   */                                        
                //alert("success")
-					//var series = chart_cpu.series[0]
-					//shift = false //series.data.length > 20 // shift if the series is longer than 20
                // add 4 points
                var x = (new Date()).getTime() + 8*3600*1000; // 当前时间 
-					//alert(point);
                var out = eval("(" + point + ")")
                //var out = eval( point )
 					var y1 = out[0]
@@ -47,7 +47,10 @@
 					alert(y5);
 					alert(y6);
 					alert(y7);*/
-               //y1=Math.random() * 100;
+               /*y3 = 3 + Math.random() * 10;
+               y2 = 10000+Math.random() * 20000;
+               y4 = 10 + Math.random() * 40;
+               y5 = 10 + Math.random() * 40;*/
                chart_cpu.series[0].addPoint([x,y3], true, true);
                chart_mem.series[0].addPoint([x,y2], true, true);
                chart_rx.series[0].addPoint([x,y4], true, true);
@@ -56,7 +59,7 @@
 					// call it again after one second
                var etime = new Date();
                d_date=etime.getTime()-stime.getTime();
-					setTimeout(requestData, 1000-d_date);	
+					setTimeout(requestData, 1000 - d_date);	
 				},
 				cache: false
 			});
@@ -71,7 +74,7 @@ $(document).ready(function(){
             defaultSeriesType: 'spline', //图表类型为曲线图 
             backgroundColor:'#DFFDFD',
             events: { 
-                load: requestData
+                //load: requestData
                                } 
                       }, 
         title: { 
@@ -255,7 +258,7 @@ $(function() {
             defaultSeriesType: 'spline', //图表类型为曲线图 
             backgroundColor:'#DFFDFD',
             events: { 
-        
+                 load: requestData
                                  } 
                       }, 
         title: { 
@@ -273,7 +276,7 @@ $(function() {
 				    		return this.value +'kb/s';
 				              }
                                  },
-            max: 100, //Y轴最大值 
+            max: 200, //Y轴最大值 
             min: 0  //Y轴最小值 
                       }, 
         tooltip: {//当鼠标悬置数据点时的提示框 
@@ -307,40 +310,19 @@ $(function() {
                      }] 
           }); 
 }); 
-
 		</script>
 </head>
-<body>
+<body bgcolor="#f0f0f0">
 <script type="text/javascript" src="/media/js/highcharts.js"></script>
 <script type="text/javascript" src="/media/js/modules/exporting.js"></script>
-<h3>虚拟机集群管理系统</h3>
-<p> </p>
 
-<div class="dtree" style="background-color:white; font-size:20px; width: 300px; height: 200px ;position: absolute; left:100px;top:70px">
-	<script type="text/javascript">
-		d = new dTree('d');
-
-		d.add(0,-1,'Management');
-		d.add(1,0,'Node 1','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
-		d.add(2,0,'Node 2','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
-		d.add(3,1,'VM 1.1','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
-		d.add(4,0,'Node 3','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
-		d.add(5,4,'VM 4.1','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
-		d.add(6,4,'VM 4.2','','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
-
-		document.write(d);
-	</script>
-</div>
-<!--div class="dtree" style="font-size:22px">test</div-->
-<div id="cpu" style="width: 600px; height: 300px; position: absolute; left:50px;top:250px"></div>
+<div id="cpu" style="width: 480px; height: 240px; position: absolute; left:20px;top:10px"></div>
 <p> </p>
-<div id="mem" style="width: 600px; height: 300px; position: absolute; left:50px;top:600px"></div>
+<div id="mem" style="width: 480px; height: 240px; position: absolute; left:20px;top:260px"></div>
 <p> </p>
-<div id="rx" style="width: 600px; height: 300px; position: absolute; left:700px;top:250px"></div>
+<div id="rx" style="width: 480px; height: 240px; position: absolute; left:510px;top:10px"></div>
 <p> </p>
-<div id="tx" style="width: 600px; height: 300px; position: absolute; left:700px;top:600px"></div>
+<div id="tx" style="width: 480px; height: 240px; position: absolute; left:510px;top:260px"></div>
 <!--div id="tx" style="width: 600px; height: 300px; margin: 0 auto"></div-->
-
-
 	</body>
 </html>

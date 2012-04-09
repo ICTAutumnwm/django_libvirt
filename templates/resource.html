@@ -10,14 +10,58 @@
 		var chart_mem;
 		var chart_rx; 
 		var chart_tx; 
+		var maxmem;
+		var mem;
+		var pre_cpu = 0
+		var pre_cpu_total = 0
+		var pre_rb = 0
+		var pre_tb = 0
+		var flag = 1
       var para = window.location.search;
+		function getQueryStringRegExp(name)
+		{
+    		var reg = new RegExp("(^|\\?|&)"+ name +"=([^&]*)(\\s|&|$)", "i");
+    		if (reg.test(location.href)) return unescape(RegExp.$2.replace(/\+/g, " ")); return "";
+		};
+		var ip = getQueryStringRegExp('ip');
+		var number = getQueryStringRegExp('number');
+		function restart(){
+			alert ("this is a test");
+			$.ajax({
+            //async: false,
+				url:'/ajax/restart' + para, 
+				success: function(point) {
+					alert ("success");
+				},
+			});
+		}
       //alert(para)
+	   /*myurl = '/ajax/json1'
+    	if(para=="")
+			myurl = '/ajax/jsonmgt'
+	   alert(myurl)*/
+		/*function myinit() {
+			$.ajax({
+            async: false,
+				url:'/ajax/json' + para, 
+				success: function(point) {
+               var out = eval("(" + point + ")")
+					maxmem = out[0]
+               pre_cpunum = out[2]
+               pre_cpu = out[3]
+               pre_rb = out[4]
+               pre_tb = out[5]
+				},
+				cache: false
+			});
+		}
+	   myinit();*/
 		//更新
 		function requestData() {
          var stime = new Date();
 			$.ajax({
             //async: false,
-				url: '/ajax/json1' + para, 
+				url:'/ajax/json/' + para, 
 				success: function(point) {
                
                /*if(!chart_cpu){
@@ -28,31 +72,39 @@
                // add 4 points
                var x = (new Date()).getTime() + 8*3600*1000; // 当前时间 
                var out = eval("(" + point + ")")
-               //var out = eval( point )
-					var y1 = out[0]
-               var y2 = out[1]
-               var y3 = out[2]
-               var y4 = out[3]
-               var y5 = out[4]
-               var y6 = out[5]
-               var y7 = out[6]
-               /*alert(y1);
-               alert(y2);
-               alert(y3);
-               alert(y4);
-					alert(y5);
-					alert(y6);
-					alert(y7);*/
-               y3 = 3 + Math.random() * 10;
-               y2 = 10000+Math.random() * 20000;
-               y4 = 10 + Math.random() * 40;
-               y5 = 10 + Math.random() * 40;
-               chart_cpu.series[0].addPoint([x,y3], true, true);
-               chart_mem.series[0].addPoint([x,y2], true, true);
-               chart_rx.series[0].addPoint([x,y4], true, true);
-               chart_tx.series[0].addPoint([x,y5], true, true);
+					maxmem = out[0]               
+					mem = out[1]
+               //cpunum = out[2]
+               cpu = out[3]
+               rb = out[4]
+               tb = out[5]
+					//mem
+               memrate = mem/maxmem * 100
+					//cpu
+ 					d_cpu = cpu - pre_cpu
+				   pre_cpu = cpu
+				   cpurate= d_cpu/1000000 * 100
 
-					// call it again after one second
+					//rb tb
+					d_rb = rb - pre_rb
+					d_tb = tb - pre_tb
+					pre_rb = rb
+					pre_tb = tb
+	    			rkb = d_rb/1024
+					tkb = d_tb/1024
+					if(flag == 1){
+			         rkb = 0
+         			tkb = 0
+         			cpurate = 0
+						memrate = 0
+         			flag =0
+					}
+					//add points
+               chart_cpu.series[0].addPoint([x,cpurate], true, true);
+               chart_mem.series[0].addPoint([x,memrate], true, true);
+               chart_rx.series[0].addPoint([x,rkb], true, true);
+               chart_tx.series[0].addPoint([x,tkb], true, true);
+
                var etime = new Date();
                d_date=etime.getTime()-stime.getTime();
 					setTimeout(requestData, 1000 - d_date);	
@@ -60,6 +112,7 @@
 				cache: false
 			});
 		}
+		
 
 
 //cpu
@@ -131,7 +184,7 @@ $(function() {
             defaultSeriesType: 'spline', //图表类型为曲线图 
             backgroundColor:'#DFFDFD',
             events: { 
-           
+
                                  } 
                       }, 
         title: { 
@@ -146,18 +199,18 @@ $(function() {
             title: { text: '内存使用记录'   },
             labels: {
 			   	  formatter: function() {
-				    		return this.value / 100 + 'kb';
+				    		return this.value + '%';
 				              }
                                  },
-            max: 200000, //Y轴最大值 
+            max: 100, //Y轴最大值 
             min: 0  //Y轴最小值 
 
                       }, 
         tooltip: {//当鼠标悬置数据点时的提示框 
             formatter: function() { //格式化提示信息 
-                return '内存使用'+ 
-                Highcharts.dateFormat('%H:%M:%S', this.x) +' '+  
-                Highcharts.numberFormat(this.y, 2) + 'kb'; 
+                return Highcharts.dateFormat('%H:%M:%S', this.x) +' '+  
+                Highcharts.numberFormat(this.y, 2) + '%' + ' ' +
+					 Highcharts.numberFormat(mem,0) + 'MB';
                                 } 
                       }, 
         legend: { 
@@ -311,14 +364,14 @@ $(function() {
 <body bgcolor="#f0f0f0">
 <script type="text/javascript" src="/media/js/highcharts.js"></script>
 <script type="text/javascript" src="/media/js/modules/exporting.js"></script>
-
-<div id="cpu" style="width: 480px; height: 240px; position: absolute; left:20px;top:10px"></div>
+<p>虚拟机 所在节点IP：<script>document.write(ip);</script> 名称:VM<script>document.write(number);</script>    <input type="button" value="重启虚拟机" onclick="restart()" > </input> </p> 
+<div id="cpu" style="width: 480px; height: 240px; position: absolute; left:20px;top:50px"></div>
 <p> </p>
-<div id="mem" style="width: 480px; height: 240px; position: absolute; left:20px;top:260px"></div>
+<div id="mem" style="width: 480px; height: 240px; position: absolute; left:20px;top:300px"></div>
 <p> </p>
-<div id="rx" style="width: 480px; height: 240px; position: absolute; left:510px;top:10px"></div>
+<div id="rx" style="width: 480px; height: 240px; position: absolute; left:510px;top:50px"></div>
 <p> </p>
-<div id="tx" style="width: 480px; height: 240px; position: absolute; left:510px;top:260px"></div>
+<div id="tx" style="width: 480px; height: 240px; position: absolute; left:510px;top:300px"></div>
 <!--div id="tx" style="width: 600px; height: 300px; margin: 0 auto"></div-->
 	</body>
 </html>

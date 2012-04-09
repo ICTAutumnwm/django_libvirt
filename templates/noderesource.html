@@ -5,18 +5,62 @@
 		<title>虚拟机集群管理系统</title>
 		<script type="text/javascript" src="/media/jquery/jquery.js"></script>
       <!--link rel="StyleSheet" href="/media/dtree/dtree.css" type="text/css" /-->
-      <script type="text/javascript" src="/media/dtree/dtree.js"></script>
 		<script type="text/javascript">
 		var chart_cpu;
 		var chart_mem;
 		var chart_rx; 
 		var chart_tx; 
+		var maxmem;
+		var mem;
+		var pre_cpu = 0
+		var pre_cpu_total = 0
+		var pre_rb = 0
+		var pre_tb = 0
+		var flag = 1
+      var para = window.location.search;
+		function getQueryStringRegExp(name)
+		{
+    		var reg = new RegExp("(^|\\?|&)"+ name +"=([^&]*)(\\s|&|$)", "i");
+    		if (reg.test(location.href)) return unescape(RegExp.$2.replace(/\+/g, " ")); return "";
+		};
+		var ip = getQueryStringRegExp('ip');
+		var number = getQueryStringRegExp('number');
+		function createall(){
+			alert ("this is a test");
+			$.ajax({
+				url:'/ajax/createall' + para, 
+				success: function(point) {
+					alert ("success");
+				},
+			});
+		}
+      //alert(para)
+	   /*myurl = '/ajax/json1'
+    	if(para=="")
+			myurl = '/ajax/jsonmgt'
+	   alert(myurl)*/
+		/*function myinit() {
+			$.ajax({
+            async: false,
+				url:'/ajax/json' + para, 
+				success: function(point) {
+               var out = eval("(" + point + ")")
+					maxmem = out[0]
+               pre_cpunum = out[2]
+               pre_cpu = out[3]
+               pre_rb = out[4]
+               pre_tb = out[5]
+				},
+				cache: false
+			});
+		}
+	   myinit();*/
 		//更新
 		function requestData() {
          var stime = new Date();
 			$.ajax({
             //async: false,
-				url: '/ajax/json1', 
+				url:'/ajax/json/' + para, 
 				success: function(point) {
                
                /*if(!chart_cpu){
@@ -27,27 +71,39 @@
                // add 4 points
                var x = (new Date()).getTime() + 8*3600*1000; // 当前时间 
                var out = eval("(" + point + ")")
-               //var out = eval( point )
-					var y1 = out[0]
-               var y2 = out[1]
-               var y3 = out[2]
-               var y4 = out[3]
-               var y5 = out[4]
-               var y6 = out[5]
-               var y7 = out[6]
-               /*alert(y1);
-               alert(y2);
-               alert(y3);
-               alert(y4);
-					alert(y5);
-					alert(y6);
-					alert(y7);*/
-               chart_cpu.series[0].addPoint([x,y3], true, true);
-               chart_mem.series[0].addPoint([x,y2], true, true);
-               chart_rx.series[0].addPoint([x,y4], true, true);
-               chart_tx.series[0].addPoint([x,y5], true, true);
+					maxmem = out[0]               
+					mem = out[1]
+               //cpunum = out[2]
+               cpu = out[3]
+               rb = out[4]
+               tb = out[5]
+					//mem
+               memrate = mem/maxmem * 100
+					//cpu
+ 					d_cpu = cpu - pre_cpu
+				   pre_cpu = cpu
+				   cpurate= d_cpu/1000000 * 100
 
-					// call it again after one second
+					//rb tb
+					d_rb = rb - pre_rb
+					d_tb = tb - pre_tb
+					pre_rb = rb
+					pre_tb = tb
+	    			rkb = d_rb/1024
+					tkb = d_tb/1024
+					if(flag == 1){
+			         rkb = 0
+         			tkb = 0
+         			cpurate = 0
+						memrate = 0
+         			flag =0
+					}
+					//add points
+               chart_cpu.series[0].addPoint([x,cpurate], true, true);
+               chart_mem.series[0].addPoint([x,memrate], true, true);
+               chart_rx.series[0].addPoint([x,rkb], true, true);
+               chart_tx.series[0].addPoint([x,tkb], true, true);
+
                var etime = new Date();
                d_date=etime.getTime()-stime.getTime();
 					setTimeout(requestData, 1000 - d_date);	
@@ -55,6 +111,7 @@
 				cache: false
 			});
 		}
+		
 
 
 //cpu
@@ -126,7 +183,7 @@ $(function() {
             defaultSeriesType: 'spline', //图表类型为曲线图 
             backgroundColor:'#DFFDFD',
             events: { 
-           
+
                                  } 
                       }, 
         title: { 
@@ -141,18 +198,18 @@ $(function() {
             title: { text: '内存使用记录'   },
             labels: {
 			   	  formatter: function() {
-				    		return this.value / 100 + 'kb';
+				    		return this.value + '%';
 				              }
                                  },
-            max: 200000, //Y轴最大值 
+            max: 100, //Y轴最大值 
             min: 0  //Y轴最小值 
 
                       }, 
         tooltip: {//当鼠标悬置数据点时的提示框 
             formatter: function() { //格式化提示信息 
-                return '内存使用'+ 
-                Highcharts.dateFormat('%H:%M:%S', this.x) +' '+  
-                Highcharts.numberFormat(this.y, 2) + 'kb'; 
+                return Highcharts.dateFormat('%H:%M:%S', this.x) +' '+  
+                Highcharts.numberFormat(this.y, 2) + '%' + ' ' +
+					 Highcharts.numberFormat(mem,0) + 'MB';
                                 } 
                       }, 
         legend: { 
@@ -303,44 +360,17 @@ $(function() {
 }); 
 		</script>
 </head>
-<body>
+<body bgcolor="#f0f0f0">
 <script type="text/javascript" src="/media/js/highcharts.js"></script>
 <script type="text/javascript" src="/media/js/modules/exporting.js"></script>
-<h3>虚拟机集群管理系统</h3>
+<p>物理节点 节点IP：<script>document.write(ip);</script>    <input type="button" value="批处理创建虚拟机" onclick="createall()" > </input> </p> 
+<div id="cpu" style="width: 480px; height: 240px; position: absolute; left:20px;top:50px"></div>
 <p> </p>
-
-<div class="dtree" id="treeDiv" style="background-color:white; font-size:20px; width: 300px; height: 200px ;position: absolute; left:100px;top:70px">
-	<script type="text/javascript">
-                    //生成新的树，ajax方式获取最新tree，每个json item表示一个节点
-       function getTree(){ 
-            var stime1 = new Date();
-            $.getJSON('/ajax/tree',function(data){
-                  tree = new dTree('tree');   //参数tree，表示生成的html代码中id的标记，不影响功能
-                  tree.add(0,-1,'Management');     //树根
-                        //遍历JSON中的每个entry
-                  $.each(data,function(entryIndex,entry){
-                       tree.add(entry['id'], entry['pid'], entry['name'],'','','','/media/dtree/img/base.gif','/media/dtree/img/base.gif');
-                                                 });
-                  $("#treeDiv").html(tree.toString());
-                                });
-            var etime1 = new Date();
-            d_date1=etime1.getTime()-stime1.getTime();
- 				setInterval("getTree()", 3000 - d_date1);
-                    }
-		 //setInterval("getTree()",3000 );
-       //getTree();
-	</script>
-</div>
-<!--div class="dtree" style="font-size:22px">test</div-->
-<div id="cpu" style="width: 600px; height: 300px; position: absolute; left:50px;top:250px"></div>
+<div id="mem" style="width: 480px; height: 240px; position: absolute; left:20px;top:300px"></div>
 <p> </p>
-<div id="mem" style="width: 600px; height: 300px; position: absolute; left:50px;top:600px"></div>
+<div id="rx" style="width: 480px; height: 240px; position: absolute; left:510px;top:50px"></div>
 <p> </p>
-<div id="rx" style="width: 600px; height: 300px; position: absolute; left:700px;top:250px"></div>
-<p> </p>
-<div id="tx" style="width: 600px; height: 300px; position: absolute; left:700px;top:600px"></div>
+<div id="tx" style="width: 480px; height: 240px; position: absolute; left:510px;top:300px"></div>
 <!--div id="tx" style="width: 600px; height: 300px; margin: 0 auto"></div-->
-
-
 	</body>
 </html>
