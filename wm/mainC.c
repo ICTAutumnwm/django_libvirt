@@ -813,7 +813,7 @@ void listnode(int argc, char ** argv)
 	bzero(&srvaddr, sizeof(srvaddr));
 
 	srvaddr.sin_family = AF_INET;
-	srvaddr.sin_port = htons(listnode_port);
+	srvaddr.sin_port = htons(PORT);
 	srvaddr.sin_addr = *((struct in_addr *)he->h_addr);
 
 	if(connect(sockfd, (struct sockaddr *)&srvaddr, sizeof(struct sockaddr)) == -1) {
@@ -861,7 +861,7 @@ void getstate(int argc, char ** argv)
 		bzero(&srvaddr, sizeof(srvaddr));
 
 		srvaddr.sin_family = AF_INET;
-		srvaddr.sin_port = htons(getstate_port);
+		srvaddr.sin_port = htons(PORT);
 		srvaddr.sin_addr = *((struct in_addr *)he->h_addr);
 
 		if(connect(sockfd, (struct sockaddr *)&srvaddr, sizeof(struct sockaddr)) == -1) {
@@ -2019,7 +2019,7 @@ void list(int argc, char ** argv)
 	bzero(&srvaddr, sizeof(srvaddr));
 
 	srvaddr.sin_family = AF_INET;
-	srvaddr.sin_port = htons(list_port);
+	srvaddr.sin_port = htons(PORT);
 	srvaddr.sin_addr = *((struct in_addr *)he->h_addr);
 
 	if(connect(sockfd, (struct sockaddr *)&srvaddr, sizeof(struct sockaddr)) == -1) {
@@ -2104,7 +2104,7 @@ void createall(int argc, char ** argv)
 	bzero(&srvaddr, sizeof(srvaddr));
 
 	srvaddr.sin_family = AF_INET;
-	srvaddr.sin_port = htons(createall_port);
+	srvaddr.sin_port = htons(PORT);
 	srvaddr.sin_addr = *((struct in_addr *)he->h_addr);
 
 	if(connect(sockfd, (struct sockaddr *)&srvaddr, sizeof(struct sockaddr)) == -1) {
@@ -2199,7 +2199,7 @@ void create(int argc, char ** argv)
 	bzero(&srvaddr, sizeof(srvaddr));
 
 	srvaddr.sin_family = AF_INET;
-	srvaddr.sin_port = htons(create_port);
+	srvaddr.sin_port = htons(PORT);
 	srvaddr.sin_addr = *((struct in_addr *)he->h_addr);
 
 	if(connect(sockfd, (struct sockaddr *)&srvaddr, sizeof(struct sockaddr)) == -1) {

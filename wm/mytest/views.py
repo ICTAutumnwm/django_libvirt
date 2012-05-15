@@ -8,6 +8,7 @@ from django.core import serializers
 import json
 import datetime
 import os
+import subprocess
 import string
 pre_cpu = 0
 pre_rx = 0
@@ -94,13 +95,13 @@ def jsontree( request ):
     gnum += 1
     sgnum = "%d "%gnum
     cmd="./mainC getstate" 
+    #cmd = "./jsonlist"
     output = os.popen(cmd,'r')
     ret = output.read()
     output.close()
     m = 0
     n = 0
     data = []
-    #data = [{"id":m,"pid":0,"name":"Node1","url":"ip=127.0.0.1"},{"id":2,"pid":1,"name":"VM 1.1","url":"ip=127.0.0.1&number=1"},{"id":3,"pid":1,"name":"VM 1." + snum,"url":"ip=127.0.0.1&number=2"}]
     l=len(ret)
     ndcount = ret.count('node')
     for i in range(0, ndcount):
@@ -151,10 +152,6 @@ def jsontree( request ):
     return HttpResponse( data )
 def jsonmgt( request ):
     print "calulate data"
-    #ip = request.GET.get('ip')
-    #number = request.GET.get('number')
-    #print ip
-    #print number
     cmd="./mgtinfo" 
     output = os.popen(cmd,'r')
     ret = output.read()
@@ -172,16 +169,20 @@ def jsonmgt( request ):
 def jsonnode(request):
     print "node data"
     ip = request.GET.get('ip')
-    #number = request.GET.get('number')
     print ip
-    #print number 
-    #cmd="./mainC list -n " + number + " -i " + ip
-    #cmd="./mainC list -n 1 -i 127.0.0.1" 
-    #output = os.popen(cmd,'r')
-    #ret = output.read()
-    #output.close()
-    data = [1]
-    #print result
+    cmd="./mainC listnode -i " + ip
+    output = os.popen(cmd,'r')
+    ret = output.read()
+    info = ret.split(',')
+    maxmem = string.atof(info[0])
+    mem = string.atof(info[1])
+    cpu_use = string.atof(info[2])
+    cpu_total = string.atof(info[3])
+    rb = string.atof(info[4])
+    tb = string.atof(info[5])
+    output.close()
+    data = [maxmem,mem,cpu_use,cpu_total,rb,tb]
+    print ret
     data = simplejson.dumps( data, cls = QuerySetEncoder )
     return HttpResponse( data )
 def createall( request ):
@@ -222,15 +223,14 @@ def json(request):
     return HttpResponse( data )
 def restart( request ):
     print "restarting"
-    ip = request.GET.get('ip')
-    number = request.GET.get('number')
-    print ip
-    print number
-    #cmd="./mainC list -n " + number + " -i " + ip
-    #cmd="./mainC list -n 1 -i 127.0.0.1" 
-    #output = os.popen(cmd,'r')
-    #ret = output.read()
-    #output.close()
+    rebootip = request.GET.get('rebootip')
+    #number = request.GET.get('number')
+    print rebootip
+    #print number
+    cmd="./mainC reboot -i " + rebootip
+    output = os.popen(cmd,'r')
+    ret = output.read()
+    output.close()
     data = [1]
     data = simplejson.dumps( data, cls = QuerySetEncoder )
     return HttpResponse( data )

@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+      <link rel="stylesheet" type="text/css" href="/media/css/resource.css"/>
 		<title>虚拟机集群管理系统</title>
 		<script type="text/javascript" src="/media/jquery/jquery.js"></script>
       <!--link rel="StyleSheet" href="/media/dtree/dtree.css" type="text/css" /-->
@@ -18,33 +19,21 @@
 		var pre_tb = 0
 		var flag = 1
       var para = window.location.search;
-      //alert(para)
-	   /*myurl = '/ajax/json1'
-    	if(para=="")
-			myurl = '/ajax/jsonmgt'
-	   alert(myurl)*/
-		/*function myinit() {
-			$.ajax({
-            async: false,
-				url:'/ajax/jsonmgt', 
-				success: function(point) {
-               var out = eval("(" + point + ")")
-					maxmem = out[0]
-               pre_cpu = out[2]
-               pre_cpu_total = out[3]
-               pre_rb = out[4]
-               pre_tb = out[5]
-				},
-				cache: false
-			});
-		}*/
-	   //myinit();
+		function getQueryStringRegExp(name)
+		{
+    		var reg = new RegExp("(^|\\?|&)"+ name +"=([^&]*)(\\s|&|$)", "i");
+    		if (reg.test(location.href)) return unescape(RegExp.$2.replace(/\+/g, " ")); return "";
+		};
+		var ip = getQueryStringRegExp('ip');
+		var number = getQueryStringRegExp('number');
+
+
 		//更新
 		function requestData() {
          var stime = new Date();
 			$.ajax({
             //async: false,
-				url:'/ajax/jsonmgt', 
+				url:'/ajax/json/' + para, 
 				success: function(point) {
                
                /*if(!chart_cpu){
@@ -55,21 +44,20 @@
                // add 4 points
                var x = (new Date()).getTime() + 8*3600*1000; // 当前时间 
                var out = eval("(" + point + ")")
-               //var out = eval( point )
-               maxmem = out[0]
-               mem = out[1]
-               cpu_use = out[2]
-               cpu_total = out[3]
+					maxmem = out[0]               
+					mem = out[1]
+               //cpunum = out[2]
+               cpu = out[3]
                rb = out[4]
                tb = out[5]
-
+					//mem
                memrate = mem/maxmem * 100
 					//cpu
-					d_cpu = cpu_use - pre_cpu
-					d_cpu_total = cpu_total - pre_cpu_total
-					pre_cpu = cpu_use
-					pre_cpu_total = cpu_total
-	    			cpurate = d_cpu/d_cpu_total *100
+ 					d_cpu = cpu - pre_cpu
+				   pre_cpu = cpu
+				   cpurate= d_cpu/1000000 * 100
+               if(cpurate == 100)
+                  cpurate = 99.9
 					//rb tb
 					d_rb = rb - pre_rb
 					d_tb = tb - pre_tb
@@ -275,7 +263,7 @@ $(function() {
                 for (i = -19; i <= 0; i++) { 
                     data.push({ 
                         x: time + i * 1000,  
-                        y: 0 
+                        y: 0 * 100 
                                                       }); 
                                            } 
                 return data; 
@@ -336,7 +324,7 @@ $(function() {
                 for (i = -19; i <= 0; i++) { 
                     data.push({ 
                         x: time + i * 1000,  
-                        y: 0
+                        y: 0 *100 
                                                       }); 
                                            } 
                 return data; 
@@ -349,14 +337,14 @@ $(function() {
 <body bgcolor="#f0f0f0">
 <script type="text/javascript" src="/media/js/highcharts.js"></script>
 <script type="text/javascript" src="/media/js/modules/exporting.js"></script>
-<p>主控节点</p>
-<div id="cpu" style="width: 480px; height: 240px; position: absolute; left:20px;top:50px"></div>
+<p>虚拟机 所在节点IP：<script>document.write(ip);</script> 名称:VM<script>document.write(number);</script> </p> 
+<div id="cpu"></div>
 <p> </p>
-<div id="mem" style="width: 480px; height: 240px; position: absolute; left:20px;top:300px"></div>
+<div id="mem"></div>
 <p> </p>
-<div id="rx" style="width: 480px; height: 240px; position: absolute; left:510px;top:50px"></div>
+<div id="rx"></div>
 <p> </p>
-<div id="tx" style="width: 480px; height: 240px; position: absolute; left:510px;top:300px"></div>
+<div id="tx"></div>
 <!--div id="tx" style="width: 600px; height: 300px; margin: 0 auto"></div-->
 	</body>
 </html>

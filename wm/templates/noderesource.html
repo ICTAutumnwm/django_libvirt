@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+      <link rel="stylesheet" type="text/css" href="/media/css/resource.css"/>
 		<title>虚拟机集群管理系统</title>
 		<script type="text/javascript" src="/media/jquery/jquery.js"></script>
       <!--link rel="StyleSheet" href="/media/dtree/dtree.css" type="text/css" /-->
@@ -17,102 +18,76 @@
 		var pre_rb = 0
 		var pre_tb = 0
 		var flag = 1
-      var para = window.location.search;
+		var para = window.location.search;
 		function getQueryStringRegExp(name)
 		{
-    		var reg = new RegExp("(^|\\?|&)"+ name +"=([^&]*)(\\s|&|$)", "i");
-    		if (reg.test(location.href)) return unescape(RegExp.$2.replace(/\+/g, " ")); return "";
+    			var reg = new RegExp("(^|\\?|&)"+ name +"=([^&]*)(\\s|&|$)", "i");
+    			if (reg.test(location.href)) return unescape(RegExp.$2.replace(/\+/g, " ")); return "";
 		};
 		var ip = getQueryStringRegExp('ip');
 		var number = getQueryStringRegExp('number');
-		function restart(){
-			alert ("this is a test");
+		function createall(){
 			$.ajax({
-            //async: false,
-				url:'/ajax/restart' + para, 
+				url:'/ajax/createall' + para, 
 				success: function(point) {
 					alert ("success");
 				},
 			});
 		}
-      //alert(para)
-	   /*myurl = '/ajax/json1'
-    	if(para=="")
-			myurl = '/ajax/jsonmgt'
-	   alert(myurl)*/
-		/*function myinit() {
-			$.ajax({
-            async: false,
-				url:'/ajax/json' + para, 
-				success: function(point) {
-               var out = eval("(" + point + ")")
-					maxmem = out[0]
-               pre_cpunum = out[2]
-               pre_cpu = out[3]
-               pre_rb = out[4]
-               pre_tb = out[5]
-				},
-				cache: false
-			});
-		}
-	   myinit();*/
 		//更新
 		function requestData() {
-         var stime = new Date();
+         		var stime = new Date();
 			$.ajax({
-            //async: false,
-				url:'/ajax/json/' + para, 
+            			//async: false,
+				url:'/ajax/jsonnode/'+ para, 
 				success: function(point) {
-               
-               /*if(!chart_cpu){
-      				 setTimeout(requestData, 1000);
-                   return     
-                                         }   */                                        
-               //alert("success")
-               // add 4 points
-               var x = (new Date()).getTime() + 8*3600*1000; // 当前时间 
-               var out = eval("(" + point + ")")
-					maxmem = out[0]               
-					mem = out[1]
-               //cpunum = out[2]
-               cpu = out[3]
-               rb = out[4]
-               tb = out[5]
-					//mem
-               memrate = mem/maxmem * 100
-					//cpu
- 					d_cpu = cpu - pre_cpu
-				   pre_cpu = cpu
-				   cpurate= d_cpu/1000000 * 100
+               				// add 4 points
+               				var x = (new Date()).getTime() + 8*3600*1000; // 当前时间 
+               				var out = eval("(" + point + ")")
+               				//var out = eval( point )
+               				maxmem = out[0]
+               				mem = out[1]
+               				cpu_use = out[2]
+               				cpu_total = out[3]
+               				rb = out[4]
+               				tb = out[5]
 
+               				memrate = mem/maxmem * 100
+					//cpu
+					d_cpu = cpu_use - pre_cpu
+					d_cpu_total = cpu_total - pre_cpu_total
+					pre_cpu = cpu_use
+					pre_cpu_total = cpu_total
+	    				cpurate = d_cpu/d_cpu_total *100
+               				if(cpurate >= 100)
+               				   cpurate = 99.9
 					//rb tb
 					d_rb = rb - pre_rb
 					d_tb = tb - pre_tb
 					pre_rb = rb
 					pre_tb = tb
-	    			rkb = d_rb/1024
+	    				rkb = d_rb/1024
 					tkb = d_tb/1024
 					if(flag == 1){
-			         rkb = 0
-         			tkb = 0
-         			cpurate = 0
+		                        	rkb = 0
+		         			tkb = 0
+         					cpurate = 0
 						memrate = 0
-         			flag =0
+         					flag =0
 					}
 					//add points
-               chart_cpu.series[0].addPoint([x,cpurate], true, true);
-               chart_mem.series[0].addPoint([x,memrate], true, true);
-               chart_rx.series[0].addPoint([x,rkb], true, true);
-               chart_tx.series[0].addPoint([x,tkb], true, true);
+               				chart_cpu.series[0].addPoint([x,cpurate], true, true);
+				        chart_mem.series[0].addPoint([x,memrate], true, true);
+			                chart_rx.series[0].addPoint([x,rkb], true, true);
+			                chart_tx.series[0].addPoint([x,tkb], true, true);
 
-               var etime = new Date();
-               d_date=etime.getTime()-stime.getTime();
+				        var etime = new Date();
+			                d_date=etime.getTime()-stime.getTime();
 					setTimeout(requestData, 1000 - d_date);	
 				},
 				cache: false
 			});
 		}
-		
 
 
 //cpu
@@ -364,14 +339,14 @@ $(function() {
 <body bgcolor="#f0f0f0">
 <script type="text/javascript" src="/media/js/highcharts.js"></script>
 <script type="text/javascript" src="/media/js/modules/exporting.js"></script>
-<p>虚拟机 所在节点IP：<script>document.write(ip);</script> 名称:VM<script>document.write(number);</script>    <input type="button" value="重启虚拟机" onclick="restart()" > </input> </p> 
-<div id="cpu" style="width: 480px; height: 240px; position: absolute; left:20px;top:50px"></div>
-<p> </p>
-<div id="mem" style="width: 480px; height: 240px; position: absolute; left:20px;top:300px"></div>
-<p> </p>
-<div id="rx" style="width: 480px; height: 240px; position: absolute; left:510px;top:50px"></div>
-<p> </p>
-<div id="tx" style="width: 480px; height: 240px; position: absolute; left:510px;top:300px"></div>
+<p>物理节点 节点IP：<script>document.write(ip);</script>    <input type="button" value="批处理创建虚拟机" onclick="createall()" > </input> </p> 
+<div id="cpu"></div>
+<br/>
+<div id="mem"></div>
+<br/>
+<div id="rx"></div>
+<br/>
+<div id="tx"></div>
 <!--div id="tx" style="width: 600px; height: 300px; margin: 0 auto"></div-->
 	</body>
 </html>
