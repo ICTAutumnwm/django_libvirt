@@ -1,0 +1,21 @@
+/*
+    Mgtresource styles
+*/
+
+#span{
+    position: absolute; 
+    left:180px;
+    top:15px;
+}
+#inputip{
+    position: absolute; 
+    left:200px;
+    top:10px;
+}
+
+
+#restart{
+    position: absolute; 
+    left:410px;
+    top:10px;
+}
